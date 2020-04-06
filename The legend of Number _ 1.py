@@ -8,6 +8,7 @@ Created on Thu Apr  2 17:59:24 2020
 from biblio import *
 from tkinter import Tk, Frame, Canvas, Button, Label
 from tkinter.font import Font
+from pathlib import Path
 
 class App(Tk):
     def __init__(self):
@@ -36,11 +37,13 @@ class MainMenu(Frame):
         self.master = master
         self.isflashing = True
         self.state = True
+        # self.bgImage = PhotoImage(file=img/defult.png)
+        # self.cnv = Canvas(self, width=WIDTH, height=HEIGHT)
+        # self.cnv.pack()
         Frame.__init__(self, master, bg="black")
         fontTitle = Font(family="Arial", size=40)
         fontNormal = Font(family="Arial", size=20)
-        Label(self, text="The Legends of Number :", fg="green", bg="black", font=fontTitle).grid(sticky="nsew", padx=WIDTH//4-20, pady=(30, 0))
-        Label(self, text="1", fg="green", bg="black", font=fontTitle).grid(padx=WIDTH//2-20, sticky="nsew")
+        Label(self, text="The Legends of Number :\n1", fg="green", bg="black", font=fontTitle).grid(sticky="nsew", padx=WIDTH//4-20, pady=(30, 0))
         self.text = Label(self, text="Appuyez sur Entrer pour jouer", font=fontNormal, fg="white", bg="black")
         self.text.grid(pady=(HEIGHT//2-20,HEIGHT))
         self.flash()
@@ -66,20 +69,77 @@ class SelectMenu(Frame):
         Frame.__init__(self, master)
         self.cnv = Canvas(self, width=WIDTH, height=HEIGHT, bg="black")
         self.cnv.pack()
-        points = ((43,40), (WIDTH-43, 40), (WIDTH-40, 43), (WIDTH-40, HEIGHT-43), (WIDTH-43, HEIGHT-40), (43, HEIGHT-40), (40, HEIGHT-43), (40, 43))
-        self.cnv.create_polygon(points, outline="white")
-        self.file1 = ButtonMainMenu(self.cnv, WIDTH//4, 100, WIDTH//2, 75, index=1)
-        self.file2 = ButtonMainMenu(self.cnv, WIDTH//4, 200, WIDTH//2, 75, index=2)
-        self.file3 = ButtonMainMenu(self.cnv, WIDTH//4, 300, WIDTH//2, 75, index=3)
-        self.file1.draw()
-        self.file2.draw()
-        self.file3.draw()
+        self.bgImage = PhotoImage(file="img/default.png")
+        img = PhotoImage(file="img/select.png")
+        self.cnv.create_image(WIDTH//2, HEIGHT//2, image=self.bgImage, anchor="center")
+        self.cnv.create_image(WIDTH//2, HEIGHT//2, image=img, anchor="center")
+        self.cnv.bgImage = self.bgImage
+        self.cnv.image = img
 
-    def transition(self):
-        pass
+        infosFile1 = self.getFileInfo("saves/file1.txt")
+        infosFile2 = self.getFileInfo("saves/file2.txt")
+        infosFile3 = self.getFileInfo("saves/file3.txt")
+
+        # create buttons
+        self.b1 = ButtonMainMenu(self.cnv, WIDTH//4, 100, WIDTH//2, 75, infos=infosFile1)
+        self.b2 = ButtonMainMenu(self.cnv, WIDTH//4, 200, WIDTH//2, 75, infos=infosFile2)
+        self.b3 = ButtonMainMenu(self.cnv, WIDTH//4, 300, WIDTH//2, 75, infos=infosFile3)
+
+        # draw buttons
+        self.b1.draw()
+        self.b2.draw()
+        self.b3.draw()
+
+        # left click events
+        self.b1.bind("<Button-1>", lambda e: self.func(e, 1))
+        self.b2.bind("<Button-1>", lambda e: self.func(e, 2))
+        self.b3.bind("<Button-1>", lambda e: self.func(e, 3))
+
+        # mouse over events
+        self.b1.bind("<Enter>", self.b1.mouseOver)
+        self.b2.bind("<Enter>", self.b2.mouseOver)
+        self.b3.bind("<Enter>", self.b3.mouseOver)
+
+        # mouse not over anymore events
+        self.b1.bind("<Leave>", self.b1.mouseQuit)
+        self.b2.bind("<Leave>", self.b2.mouseQuit)
+        self.b3.bind("<Leave>", self.b3.mouseQuit)
+
+    def func(self, event, index):
+        if index == 1:
+            print("ok1")
+        elif index == 2:
+            print("ok2")
+        elif index == 3:
+            print("ok3")
+        else:
+            print("this should not happen")
+
+    def getFileInfo(self, filepath):
+        infos = {
+            "charaName" : "",
+            "map" : (0, 0),
+            "life" : 3,
+            "maxLife" : 3}
+        try:
+            file = open(filepath, "r")
+            name = file.readline().strip('\n')
+            pos = file.readline().strip('\n')
+            life = file.readline().strip('\n')
+            maxLife = file.readline().strip('\n')
+            file.close()
+            infos["charaName"] = name
+            i = pos.find(',')
+            infos["map"] =(int(pos[0:i]), int(pos[i+1:]))
+            infos["life"] = int(life)
+            infos["maxLife"] = int(maxLife)
+            return infos
+        except EnvironmentError:
+            Path("saves").mkdir(parents=True, exist_ok=True)
+            return None
 
 class ButtonMainMenu(object):
-    def __init__(self, canvas, x, y, width, height, marge=5, index=0):
+    def __init__(self, canvas, x, y, width, height, marge=5, infos=None):
         self.cnv = canvas
         self.marge = marge
         self.points = [(x+marge,y), (x+width-marge, y), (x+width, y+marge), (x+width, y+height-marge), (x+width-marge, y+height), (x+marge, y+height), (x, y+height-marge), (x, y+marge)]
@@ -87,12 +147,28 @@ class ButtonMainMenu(object):
         self.y = y
         self.w = width
         self.h = height
-        self.text = "Pas de sauvegarde"
+        self.text = "Pas de sauvegarde" if infos == None else infos["charaName"]
+        self.life = 0 if infos == None else infos["life"]
         self.font = Font(family="Arial", size=20)
+        self.polygon = None
+        self.label = None
 
     def draw(self):
-        self.cnv.create_polygon(self.points, outline="white")
-        self.cnv.create_text(self.x+self.w//4, self.y+self.h//2, text=self.text, font=self.font, fill="white")
+        self.polygon = self.cnv.create_polygon(self.points, outline="white", fill='')
+        self.label = self.cnv.create_text(self.x+self.w//4, self.y+self.h//2, text=self.text, font=self.font, fill="white")
+
+    def bind(self, event, func):
+            self.cnv.tag_bind(self.polygon, event, func)
+            self.cnv.tag_bind(self.label, event, func)
+
+    def func(self):
+        pass
+
+    def mouseOver(self, event):
+        self.cnv.itemconfig(self.polygon, fill="#888888")
+
+    def mouseQuit(self, event):
+        self.cnv.itemconfig(self.polygon, fill='')
 
 
 WIDTH = 1000
