@@ -37,15 +37,14 @@ class MainMenu(Frame):
         self.master = master
         self.isflashing = True
         self.state = True
-        # self.bgImage = PhotoImage(file=img/defult.png)
-        # self.cnv = Canvas(self, width=WIDTH, height=HEIGHT)
-        # self.cnv.pack()
-        Frame.__init__(self, master, bg="black")
+        Frame.__init__(self, master)
+        self.bgImage = PhotoImage(file="img/default.png")
+        self.cnv = Canvas(self, width=WIDTH, height=HEIGHT, bg="black")
+        self.cnv.pack()
         fontTitle = Font(family="Arial", size=40)
         fontNormal = Font(family="Arial", size=20)
-        Label(self, text="The Legends of Number :\n1", fg="green", bg="black", font=fontTitle).grid(sticky="nsew", padx=WIDTH//4-20, pady=(30, 0))
-        self.text = Label(self, text="Appuyez sur Entrer pour jouer", font=fontNormal, fg="white", bg="black")
-        self.text.grid(pady=(HEIGHT//2-20,HEIGHT))
+        self.cnv.create_text(WIDTH//2, 100, text="The Legends of Number :\n1", fill="green", font=fontTitle, justify="center")
+        self.text = self.cnv.create_text(WIDTH//2, HEIGHT*3//4, text="Appuyez sur Entrer pour jouer", disabledfill="#888888", fill="white", font=fontNormal)
         self.flash()
         master.bind('<Return>', self.startCommand)
 
@@ -56,10 +55,10 @@ class MainMenu(Frame):
 
     def flash(self):
         if self.state:
-            self.text.config(state="disabled")
+            self.cnv.itemconfig(self.text, state="disabled")
             self.state = False
         else:
-            self.text.config(state=("normal"))
+            self.cnv.itemconfig(self.text, state=("normal"))
             self.state = True
         if self.isflashing:
             self.after(400, self.flash)
