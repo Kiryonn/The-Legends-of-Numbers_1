@@ -128,26 +128,13 @@ class SelectMenu(Frame):
             return None
 
     def func(self, event, index):
-        if index == 1:
-            if self.infosFile1 == None:
-                pass
-            else:
-                self.transition(1, 80)
-        elif index == 2:
-            if self.infosFile2 == None:
-                pass
-            else:
-                self.transition(2, 80)
-        elif index == 3:
-            if self.infosFile3 == None:
-                pass
-            else:
-                self.transition(3, 80)
+        if index in [1,2,3]:
+            self.transition(index, 80)
         else:
             print("this should not happen")
 
     def transition(self, index, cpt, t=False):
-        if t and cpt == 0:
+        if cpt == 0 and t:
             self.showFileMenu(index)
         else:
             if cpt == 0:
@@ -193,7 +180,7 @@ class SelectMenu(Frame):
 
         def draw(self):
             self.polygon = self.cnv.create_polygon(self.points, outline="white", fill='')
-            self.label = self.cnv.create_text(self.x+self.w//4, self.y+self.h//2, text=self.text, font=self.font, fill="white")
+            self.label = self.cnv.create_text(self.x + len(self.text)*7, self.y+self.h//2, text=self.text, font=self.font, fill="white")
 
         def hide(self):
             self.cnv.itemconfigure(self.polygon, state="hidden")
@@ -214,7 +201,11 @@ class SelectMenu(Frame):
             self.cnv.delete(self.polygon)
             self.cnv.delete(self.label)
             self.polygon = self.cnv.create_polygon(self.points, outline="white", fill='')
-            self.label = self.cnv.create_text(self.x+self.w//4, self.y+self.h//2, text=self.text, font=self.font, fill="white")
+            self.label = self.cnv.create_text(self.x + len(self.text)*7, self.y+self.h//2, text=self.text, font=self.font, fill="white")
+
+        def centerLabel(self):
+            self.cnv.delete(self.label)
+            self.label = self.cnv.create_text(self.x+self.w//2, self.y+self.h//2, text=self.text, font=self.font, fill="white")
 
         def bind(self, event, func):
                 self.cnv.tag_bind(self.polygon, event, func)
@@ -224,6 +215,11 @@ class SelectMenu(Frame):
         def unbind(self, event):
             self.cnv.tag_unbind(self.polygon, event)
             self.cnv.tag_unbind(self.label, event)
+
+        def rebind(self):
+            for event, func in self.event:
+                self.cnv.tag_bind(self.polygon, event, func)
+                self.cnv.tag_bind(self.label, event, func)
 
         def mouseOver(self, event):
             self.cnv.itemconfig(self.polygon, fill="#888888")
