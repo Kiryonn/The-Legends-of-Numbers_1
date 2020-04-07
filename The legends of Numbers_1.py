@@ -80,9 +80,9 @@ class SelectMenu(Frame):
         infosFile3 = self.getFileInfo("saves/file3.txt")
 
         # create buttons
-        self.b1 = ButtonMainMenu(self.cnv, WIDTH//4, 100, WIDTH//2, 75, infos=infosFile1)
-        self.b2 = ButtonMainMenu(self.cnv, WIDTH//4, 200, WIDTH//2, 75, infos=infosFile2)
-        self.b3 = ButtonMainMenu(self.cnv, WIDTH//4, 300, WIDTH//2, 75, infos=infosFile3)
+        self.b1 = self.ButtonMainMenu(self.cnv, WIDTH//4, 100, WIDTH//2, 75, infos=infosFile1)
+        self.b2 = self.ButtonMainMenu(self.cnv, WIDTH//4, 200, WIDTH//2, 75, infos=infosFile2)
+        self.b3 = self.ButtonMainMenu(self.cnv, WIDTH//4, 300, WIDTH//2, 75, infos=infosFile3)
 
         # draw buttons
         self.b1.draw()
@@ -103,16 +103,6 @@ class SelectMenu(Frame):
         self.b1.bind("<Leave>", self.b1.mouseQuit)
         self.b2.bind("<Leave>", self.b2.mouseQuit)
         self.b3.bind("<Leave>", self.b3.mouseQuit)
-
-    def func(self, event, index):
-        if index == 1:
-            print("ok1")
-        elif index == 2:
-            print("ok2")
-        elif index == 3:
-            print("ok3")
-        else:
-            print("this should not happen")
 
     def getFileInfo(self, filepath):
         infos = {
@@ -137,37 +127,84 @@ class SelectMenu(Frame):
             Path("saves").mkdir(parents=True, exist_ok=True)
             return None
 
-class ButtonMainMenu(object):
-    def __init__(self, canvas, x, y, width, height, marge=5, infos=None):
-        self.cnv = canvas
-        self.marge = marge
-        self.points = [(x+marge,y), (x+width-marge, y), (x+width, y+marge), (x+width, y+height-marge), (x+width-marge, y+height), (x+marge, y+height), (x, y+height-marge), (x, y+marge)]
-        self.x = x
-        self.y = y
-        self.w = width
-        self.h = height
-        self.text = "Pas de sauvegarde" if infos == None else infos["charaName"]
-        self.life = 0 if infos == None else infos["life"]
-        self.font = Font(family="Arial", size=20)
-        self.polygon = None
-        self.label = None
+    def func(self, event, index):
+        if index == 1:
+            self.transition(1, 80)
+        elif index == 2:
+            print("ok2")
+        elif index == 3:
+            print("ok3")
+        else:
+            print("this should not happen")
 
-    def draw(self):
-        self.polygon = self.cnv.create_polygon(self.points, outline="white", fill='')
-        self.label = self.cnv.create_text(self.x+self.w//4, self.y+self.h//2, text=self.text, font=self.font, fill="white")
+    def transition(self, index, cpt):
+        if cpt == 0:
+            self.showFileMenu(index)
+        else:
+            if index == 1:
+                self.b2.changePos(-10, 0)
+                self.b3.changePos(+10, 0)
+        self.after(10, lambda:self.transition(index, cpt-1))
 
-    def bind(self, event, func):
-            self.cnv.tag_bind(self.polygon, event, func)
-            self.cnv.tag_bind(self.label, event, func)
-
-    def func(self):
+    def showFileMenu(self, index):
         pass
 
-    def mouseOver(self, event):
-        self.cnv.itemconfig(self.polygon, fill="#888888")
 
-    def mouseQuit(self, event):
-        self.cnv.itemconfig(self.polygon, fill='')
+    class ButtonMainMenu(object):
+        def __init__(self, canvas, x, y, width, height, marge=5, infos=None):
+            self.cnv = canvas
+            self.marge = marge
+            self.points = [(x+marge,y), (x+width-marge, y), (x+width, y+marge), (x+width, y+height-marge), (x+width-marge, y+height), (x+marge, y+height), (x, y+height-marge), (x, y+marge)]
+            self.x = x
+            self.y = y
+            self.w = width
+            self.h = height
+            self.text = "Pas de sauvegarde" if infos == None else infos["charaName"]
+            self.life = 0 if infos == None else infos["life"]
+            self.font = Font(family="Arial", size=20)
+            self.polygon = None
+            self.label = None
+            self.events = []
+
+        def draw(self):
+            self.polygon = self.cnv.create_polygon(self.points, outline="white", fill='')
+            self.label = self.cnv.create_text(self.x+self.w//4, self.y+self.h//2, text=self.text, font=self.font, fill="white")
+
+        def hide(self):
+            self.cnv.itemconfigure(self.polygon, state="hidden")
+            self.cnv.itemconfigure(self.label, state="hidden")
+
+        def show(self):
+            self.cnv.itemconfigure(self.polygon, state="normal")
+            self.cnv.itemconfigure(self.label, state="normal")
+
+        def destroy(self):
+            self.cnv.destroy(self.polygon)
+            self.cnv.destroy(self.label)
+
+        def changePos(self, x, y):
+            self.x += x
+            self.y += y
+            self.points = [(self.x+self.marge, self.y), (self.x+self.w-self.marge, self.y), (self.x+self.w, self.y+self.marge), (self.x+self.w, self.y+self.h-self.marge), (self.x+self.w-self.marge, self.y+self.h), (self.x+self.marge, self.y+self.h), (self.x, self.y+self.h-self.marge), (self.x, self.y+self.marge)]
+            self.cnv.delete(self.polygon)
+            self.cnv.delete(self.label)
+            self.polygon = self.cnv.create_polygon(self.points, outline="white", fill='')
+            self.label = self.cnv.create_text(self.x+self.w//4, self.y+self.h//2, text=self.text, font=self.font, fill="white")
+
+        def bind(self, event, func):
+                self.cnv.tag_bind(self.polygon, event, func)
+                self.cnv.tag_bind(self.label, event, func)
+                self.events.append((event, func))
+
+        def unbind(self, event):
+            self.cnv.tag_unbind(self.polygon, event)
+            self.cnv.tag_unbind(self.label, event)
+
+        def mouseOver(self, event):
+            self.cnv.itemconfig(self.polygon, fill="#888888")
+
+        def mouseQuit(self, event):
+            self.cnv.itemconfig(self.polygon, fill='')
 
 
 WIDTH = 1000
