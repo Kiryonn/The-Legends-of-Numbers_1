@@ -75,14 +75,14 @@ class SelectMenu(Frame):
         self.cnv.bgImage = self.bgImage
         self.cnv.image = img
 
-        infosFile1 = self.getFileInfo("saves/file1.txt")
-        infosFile2 = self.getFileInfo("saves/file2.txt")
-        infosFile3 = self.getFileInfo("saves/file3.txt")
+        self.infosFile1 = self.getFileInfo("saves/file1.txt")
+        self.infosFile2 = self.getFileInfo("saves/file2.txt")
+        self.infosFile3 = self.getFileInfo("saves/file3.txt")
 
         # create buttons
-        self.b1 = self.ButtonMainMenu(self.cnv, WIDTH//4, 100, WIDTH//2, 75, infos=infosFile1)
-        self.b2 = self.ButtonMainMenu(self.cnv, WIDTH//4, 200, WIDTH//2, 75, infos=infosFile2)
-        self.b3 = self.ButtonMainMenu(self.cnv, WIDTH//4, 300, WIDTH//2, 75, infos=infosFile3)
+        self.b1 = self.ButtonMainMenu(self.cnv, WIDTH//4, 100, WIDTH//2, 75, infos=self.infosFile1)
+        self.b2 = self.ButtonMainMenu(self.cnv, WIDTH//4, 200, WIDTH//2, 75, infos=self.infosFile2)
+        self.b3 = self.ButtonMainMenu(self.cnv, WIDTH//4, 300, WIDTH//2, 75, infos=self.infosFile3)
 
         # draw buttons
         self.b1.draw()
@@ -129,22 +129,47 @@ class SelectMenu(Frame):
 
     def func(self, event, index):
         if index == 1:
-            self.transition(1, 80)
+            if self.infosFile1 == None:
+                pass
+            else:
+                self.transition(1, 80)
         elif index == 2:
-            print("ok2")
+            if self.infosFile2 == None:
+                pass
+            else:
+                self.transition(2, 80)
         elif index == 3:
-            print("ok3")
+            if self.infosFile3 == None:
+                pass
+            else:
+                self.transition(3, 80)
         else:
             print("this should not happen")
 
-    def transition(self, index, cpt):
-        if cpt == 0:
+    def transition(self, index, cpt, t=False):
+        if t and cpt == 0:
             self.showFileMenu(index)
         else:
-            if index == 1:
-                self.b2.changePos(-10, 0)
-                self.b3.changePos(+10, 0)
-        self.after(10, lambda:self.transition(index, cpt-1))
+            if cpt == 0:
+                if index != 1:
+                    self.after(10, lambda:self.transition(index, 10 if index==2 else 20, t=True))
+            elif t:
+                if index == 2:
+                    self.b2.changePos(0, -10)
+                else:
+                    self.b3.changePos(0, -10)
+                self.after(10, lambda:self.transition(index, cpt-1, t=True))
+            else:
+                if index == 1:
+                    self.b2.changePos(-10, 0)
+                    self.b3.changePos(+10, 0)
+                elif index == 2:
+                    self.b1.changePos(-10, 0)
+                    self.b3.changePos(+10, 0)
+                else:
+                    self.b1.changePos(-10, 0)
+                    self.b2.changePos(+10, 0)
+                self.after(10, lambda:self.transition(index, cpt-1))
 
     def showFileMenu(self, index):
         pass
