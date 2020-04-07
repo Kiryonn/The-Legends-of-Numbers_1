@@ -1,4 +1,4 @@
-# The-Legend-of-Numbers_1
+# The Legends of Numbers : 1
 
 Le jeu :
 Ce jeu est le premier d'une série de jeux (The Legends of Numbers) avec une histoire orientée sur des équations mathématiques et un gameplay basé sur les jeux de mon enfance (principalement Zelda).
