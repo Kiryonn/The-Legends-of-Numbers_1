@@ -52,7 +52,7 @@ class MainMenu(Frame):
         self.cnv.pack()
 
         # création de l'arriere plan
-        self.bgImage = PhotoImage(file="img/default2.png")
+        self.bgImage = PhotoImage(file="img/default.png")
         self.color = "#ffffff"
         self.cnv.create_rectangle(0, 0, WIDTH, HEIGHT, fill=self.color)
         self.cnv.create_image(WIDTH//2, HEIGHT//2, image=self.bgImage, anchor="center")
