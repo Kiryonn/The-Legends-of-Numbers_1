@@ -8,6 +8,7 @@ Created on Thu Apr  2 17:59:24 2020
 from tkinter import Tk, Frame, Canvas, PhotoImage
 from tkinter.font import Font
 from pathlib import Path
+from random import randrange
 
 class App(Tk):
     def __init__(self):
@@ -48,13 +49,11 @@ class MainMenu(Frame):
         self.state = True
 
         # création du canvas
-        self.cnv = Canvas(self, width=WIDTH, height=HEIGHT, bg="black")
+        self.cnv = Canvas(self, width=WIDTH, height=HEIGHT, bg="white")
         self.cnv.pack()
 
         # création de l'arriere plan
         self.bgImage = PhotoImage(file="img/default.png")
-        self.color = "#ffffff"
-        self.cnv.create_rectangle(0, 0, WIDTH, HEIGHT, fill=self.color)
         self.cnv.create_image(WIDTH//2, HEIGHT//2, image=self.bgImage, anchor="center")
         self.cnv.bgImage = self.bgImage
 
@@ -87,9 +86,18 @@ class MainMenu(Frame):
             self.after(400, self.flash)
 
     def animation(self):
-        self.color = self.color # temporaire le temps que je trouve de quoi faire des belles couleurs
+        red = str(hex(randrange(50, 201)))[2:]
+        green = str(hex(randrange(50, 201)))[2:]
+        blue = str(hex(randrange(50, 201)))[2:]
+        if len(red) == 1:
+            red = "0" + red
+        if len(green) == 1:
+            green = "0" + green
+        if len(blue) == 1:
+            blue = "0" + blue
+        self.cnv.configure(bg= "#" + red + green + blue)
         if self.isflashing:
-            self.after(10, self.animation)
+            self.after(200, self.animation)
 
 class SelectMenu(Frame):
     """
@@ -99,7 +107,7 @@ class SelectMenu(Frame):
         Frame.__init__(self, master)
 
         # création du canvas
-        self.cnv = Canvas(self, width=WIDTH, height=HEIGHT, bg="black")
+        self.cnv = Canvas(self, width=WIDTH, height=HEIGHT, bg="white")
         self.cnv.pack()
 
         # ajout des images
