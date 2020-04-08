@@ -5,6 +5,7 @@ Created on Thu Apr  2 17:59:24 2020
 @author: Kiryonn
 """
 
+from biblio import *
 from tkinter import Tk, Frame, Canvas, PhotoImage
 from tkinter.font import Font
 from pathlib import Path
@@ -49,7 +50,8 @@ class MainMenu(Frame):
         self.state = True
 
         # création du canvas
-        self.cnv = Canvas(self, width=WIDTH, height=HEIGHT, bg="white")
+        self.color = "#ff0000"
+        self.cnv = Canvas(self, width=WIDTH, height=HEIGHT, bg=self.color)
         self.cnv.pack()
 
         # création de l'arriere plan
@@ -58,7 +60,7 @@ class MainMenu(Frame):
         self.cnv.bgImage = self.bgImage
 
         # ajout du titre du jeu
-        self.cnv.create_text(WIDTH//2, 100, text="The Legends of Number :\n1", fill="green", font=fontTitle, justify="center")
+        self.title = self.cnv.create_text(WIDTH//2, 100, text="The Legends of Number :\n1", fill="green", font=fontTitle, justify="center")
 
         # ajout de text informatif
         self.text = self.cnv.create_text(WIDTH//2, HEIGHT*3//4, text="Appuyez sur Entrée pour jouer", disabledfill="#888888", fill="white", font=fontNormal)
@@ -86,18 +88,34 @@ class MainMenu(Frame):
             self.after(400, self.flash)
 
     def animation(self):
-        red = str(hex(randrange(50, 201)))[2:]
-        green = str(hex(randrange(50, 201)))[2:]
-        blue = str(hex(randrange(50, 201)))[2:]
-        if len(red) == 1:
-            red = "0" + red
-        if len(green) == 1:
-            green = "0" + green
-        if len(blue) == 1:
-            blue = "0" + blue
-        self.cnv.configure(bg= "#" + red + green + blue)
+        red, green, blue = hex_to_rgb(self.color[1:])
+        if red == 255 :
+            if blue == 0 and green != 0:
+                green -= 1
+            elif blue != 255:
+                blue += 1
+            else:
+                red -= 1
+        elif blue == 255:
+            if green == 0 and red != 0:
+                red -= 1
+            elif green != 255:
+                green += 1
+            else:
+                blue -= 1
+        else:
+            if red == 0 and blue != 0:
+                blue -= 1
+            elif red != 255:
+                red += 1
+            else:
+                green -= 1
+        self.color = "#" + rgb_to_hex((red,green,blue))
+        color = "#" + rgb_to_hex((255-red, 255-green, 255-blue))
+        self.cnv.configure(bg=self.color)
+        self.cnv.itemconfig(self.title, fill=color)
         if self.isflashing:
-            self.after(200, self.animation)
+            self.after(30, self.animation)
 
 class SelectMenu(Frame):
     """
