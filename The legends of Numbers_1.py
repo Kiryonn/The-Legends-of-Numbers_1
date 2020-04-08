@@ -80,9 +80,11 @@ class SelectMenu(Frame):
         self.infosFile3 = self.getFileInfo("saves/file3.txt")
 
         # create buttons
-        self.b1 = self.ButtonMainMenu(self.cnv, WIDTH//4, 100, WIDTH//2, 75, infos=self.infosFile1)
-        self.b2 = self.ButtonMainMenu(self.cnv, WIDTH//4, 200, WIDTH//2, 75, infos=self.infosFile2)
-        self.b3 = self.ButtonMainMenu(self.cnv, WIDTH//4, 300, WIDTH//2, 75, infos=self.infosFile3)
+        self.b1 = self.ButtonMainMenu(self.cnv, WIDTH//4, 100, WIDTH//2, 75, text="Pas de sauvegarde" if self.infosFile1 == None else self.infosFile1["charaName"])
+        self.b2 = self.ButtonMainMenu(self.cnv, WIDTH//4, 200, WIDTH//2, 75, text="Pas de sauvegarde" if self.infosFile2 == None else self.infosFile2["charaName"])
+        self.b3 = self.ButtonMainMenu(self.cnv, WIDTH//4, 300, WIDTH//2, 75, text="Pas de sauvegarde" if self.infosFile3 == None else self.infosFile3["charaName"])
+        self.back = None
+        self.play = None
 
         # draw buttons
         self.b1.draw()
@@ -129,41 +131,64 @@ class SelectMenu(Frame):
 
     def func(self, event, index):
         if index in [1,2,3]:
-            self.transition(index, 80)
+            self.transition1(index, 80)
         else:
             print("this should not happen")
 
-    def transition(self, index, cpt, t=False):
-        if cpt == 0 and t:
+    def transition1(self, index, cpt, dt=False):
+        if cpt == 0:
+            if dt:
+                self.b1.rebind()
+                self.b2.rebind()
+                self.b3.rebind()
+            else:
+                self.transition2(index, 10 if index==2 else 20)
+        else:
+            if index == 1:
+                self.b2.changePos(10 if dt else -10, 0)
+                self.b3.changePos(-10 if dt else 10, 0)
+            elif index == 2:
+                self.b1.changePos(10 if dt else -10, 0)
+                self.b3.changePos(-10 if dt else 10, 0)
+            else:
+                self.b1.changePos(10 if dt else -10, 0)
+                self.b2.changePos(-10 if dt else 10, 0)
+            self.after(10, lambda:self.transition1(index, cpt-1, dt=dt))
+
+    def transition2(self, index, cpt, dt=False):
+        if cpt == 0 or index == 1:
+            if dt:
+                self.transition1(index, 80, dt=True)
+            else:
+                self.back = self.ButtonMainMenu(self.cnv, WIDTH//7, -40, 90, 40, text="Retour")
+                self.transition3(index, 16)
+        else:
+            if index == 2:
+                self.b2.changePos(0, 10 if dt else -10)
+            else:
+                self.b3.changePos(0, 10 if dt else -10)
+            self.after(10, lambda:self.transition2(index, cpt-1, dt=dt))
+
+    def transition3(self, index, cpt):
+        if cpt == 0:
+            self.back.bind("<Button-1>", lambda e: self.detransition(index, event=e))
+            self.back.bind("<Enter>", self.back.mouseOver)
+            self.back.bind("<Leave>", self.back.mouseQuit)
             self.showFileMenu(index)
         else:
-            if cpt == 0:
-                if index != 1:
-                    self.after(10, lambda:self.transition(index, 10 if index==2 else 20, t=True))
-            elif t:
-                if index == 2:
-                    self.b2.changePos(0, -10)
-                else:
-                    self.b3.changePos(0, -10)
-                self.after(10, lambda:self.transition(index, cpt-1, t=True))
-            else:
-                if index == 1:
-                    self.b2.changePos(-10, 0)
-                    self.b3.changePos(+10, 0)
-                elif index == 2:
-                    self.b1.changePos(-10, 0)
-                    self.b3.changePos(+10, 0)
-                else:
-                    self.b1.changePos(-10, 0)
-                    self.b2.changePos(+10, 0)
-                self.after(10, lambda:self.transition(index, cpt-1))
+            self.back.changePos(0, +10)
+            self.after(10, lambda:self.transition3(index, cpt-1))
+
+    def detransition(self, index, event=None):
+        self.back.destroy()
+        self.transition2(index, 10 if index==2 else 20, dt=True)
 
     def showFileMenu(self, index):
         pass
 
 
     class ButtonMainMenu(object):
-        def __init__(self, canvas, x, y, width, height, marge=5, infos=None):
+        def __init__(self, canvas, x, y, width, height, marge=5, text=""):
             self.cnv = canvas
             self.marge = marge
             self.points = [(x+marge,y), (x+width-marge, y), (x+width, y+marge), (x+width, y+height-marge), (x+width-marge, y+height), (x+marge, y+height), (x, y+height-marge), (x, y+marge)]
@@ -171,8 +196,7 @@ class SelectMenu(Frame):
             self.y = y
             self.w = width
             self.h = height
-            self.text = "Pas de sauvegarde" if infos == None else infos["charaName"]
-            self.life = 0 if infos == None else infos["life"]
+            self.text = text
             self.font = Font(family="Arial", size=20)
             self.polygon = None
             self.label = None
@@ -180,7 +204,7 @@ class SelectMenu(Frame):
 
         def draw(self):
             self.polygon = self.cnv.create_polygon(self.points, outline="white", fill='')
-            self.label = self.cnv.create_text(self.x + len(self.text)*7, self.y+self.h//2, text=self.text, font=self.font, fill="white")
+            self.label = self.cnv.create_text(self.x + self.w//2, self.y+self.h//2, text=self.text, font=self.font, fill="white")
 
         def hide(self):
             self.cnv.itemconfigure(self.polygon, state="hidden")
@@ -191,8 +215,8 @@ class SelectMenu(Frame):
             self.cnv.itemconfigure(self.label, state="normal")
 
         def destroy(self):
-            self.cnv.destroy(self.polygon)
-            self.cnv.destroy(self.label)
+            self.cnv.delete(self.polygon)
+            self.cnv.delete(self.label)
 
         def changePos(self, x, y):
             self.x += x
@@ -201,7 +225,7 @@ class SelectMenu(Frame):
             self.cnv.delete(self.polygon)
             self.cnv.delete(self.label)
             self.polygon = self.cnv.create_polygon(self.points, outline="white", fill='')
-            self.label = self.cnv.create_text(self.x + len(self.text)*7, self.y+self.h//2, text=self.text, font=self.font, fill="white")
+            self.label = self.cnv.create_text(self.x + self.w//2, self.y+self.h//2, text=self.text, font=self.font, fill="white")
 
         def centerLabel(self):
             self.cnv.delete(self.label)
@@ -217,7 +241,7 @@ class SelectMenu(Frame):
             self.cnv.tag_unbind(self.label, event)
 
         def rebind(self):
-            for event, func in self.event:
+            for event, func in self.events:
                 self.cnv.tag_bind(self.polygon, event, func)
                 self.cnv.tag_bind(self.label, event, func)
 
