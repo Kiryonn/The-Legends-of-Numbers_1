@@ -15,9 +15,6 @@ class App(Tk):
     def __init__(self):
         Tk.__init__(self)
         self.geometry("%dx%d" % (WIDTH, HEIGHT))
-        self.lift()
-        self.attributes('-topmost',True)
-        self.after_idle(self.attributes,'-topmost',False)
         self.focus_force()
         self.resizable(False, False)
         self.title("The Legends of Number : 1")
@@ -60,7 +57,7 @@ class MainMenu(Frame):
         self.cnv.bgImage = self.bgImage
 
         # ajout du titre du jeu
-        self.title = self.cnv.create_text(WIDTH//2, 100, text="The Legends of Number :\n1", fill="green", font=fontTitle, justify="center")
+        self.title = self.cnv.create_text(WIDTH//2, 100, text="The Legends of Numbers :\n1", fill="green", font=fontTitle, justify="center")
 
         # ajout de text informatif
         self.text = self.cnv.create_text(WIDTH//2, HEIGHT*3//4, text="Appuyez sur Entrée pour jouer", disabledfill="#888888", fill="white", font=fontNormal)
@@ -147,6 +144,7 @@ class SelectMenu(Frame):
         self.b3 = Button(self.cnv, WIDTH//4, 300, WIDTH//2, 75, text="Pas de sauvegarde" if self.infosFile3 == None else self.infosFile3["charaName"])
         self.back = None
         self.play = None
+        self.keyboard = None
 
         # affichage des boutons
         self.b1.draw()
@@ -237,7 +235,8 @@ class SelectMenu(Frame):
                 self.transition1(index, 80, dt=-1)
             else:
                 self.back = Button(self.cnv, WIDTH//7, -40, 90, 40, text="Retour")
-                self.play = Button(self.cnv, WIDTH//7, HEIGHT+40, 90, 40, text="Play")
+                self.play = Button(self.cnv, WIDTH//7, HEIGHT+40, 90, 40, text="Jouer" if (self.infosFile1 != None if index == 1 else self.infosFile2 != None if index==2 else self.infosFile3 != None) else "Créer")
+                self.b1.mouseQuit(0)
                 self.b1.unbind()
                 self.transition3(index, 16)
         else:
@@ -260,6 +259,9 @@ class SelectMenu(Frame):
                 self.back.bind("<Button-1>", lambda e: self.detransition(index, e))
                 self.back.bind("<Enter>", self.back.mouseOver)
                 self.back.bind("<Leave>", self.back.mouseQuit)
+                self.play.bind("<Button-1>", lambda e:self.createFile("file%d.txt" % index) if self.play.text=="Créer" else self.master.switch_frame(Game))
+                self.play.bind("<Enter>", self.play.mouseOver)
+                self.play.bind("<Leave>", self.play.mouseQuit)
                 self.showFileMenu(index)
         else:
             self.back.changePos(0, 10*dt)
@@ -268,20 +270,95 @@ class SelectMenu(Frame):
 
     def detransition(self, index, event):
         self.transition3(index, 10 if index==2 else 20, dt=-1)
+        try:
+            self.cnv.delete("lbl1")
+            # self.cnv.delete("name")
+            # self.cnv.delete("cuursor")
+            self.keyboard.destroy()
+        except:
+            pass
 
     def showFileMenu(self, index):
-        pass
+        if self.play.text == "Créer":
+            self.cnv.create_text(180, 220, text="Nom :", fill="white", font=Font(family="Arial", size=20), tag="lbl1")
+            # self.cnv.create_text(tag="name")
+            # self.cnv.create_line(tag="cursor")
+            self.keyboard = self.KeyBoard(self.cnv, 142, 250, 700, HEIGHT - 400)
+            self.createFile("saves/file%d" % index)
+        else:
+            pass
 
     def createFile(self, filepath):
         pass
+        # file = open(filepath, "x")
+        # file.close()
+        # file = open(filepath, 'w')
+        # for line in self.infosFile1 if filepath[-5] == "1" else self.infosFile2 if filepath[-5] == "2" else self.infosFile3:
+        #     file.write(str(line))
+
+    class KeyBoard(object):
+        def __init__(self, cnv, x, y, width, height, marge=5):
+            self.points = [(x+marge,y), (x+width-marge, y), (x+width, y+marge), (x+width, y+height-marge), (x+width-marge, y+height), (x+marge, y+height), (x, y+height-marge), (x, y+marge)]
+            self.marge = marge
+            self.x = x
+            self.y = y
+            self.w = width
+            self.h = height
+            self.cnv = cnv
+            self.font = Font(family="Arial", size=20)
+            self.polygon = cnv.create_polygon(self.points, outline="white")
+            self.cursor = cnv.create_oval(x+14, y+5, x+44, y+35, fill="grey", outline="")
+            self.buttons = []
+            self.text = "Number"
+            self.lastpos= [0, 0]
+            self.createButtons()
+
+        def destroy(self):
+            self.cnv.delete(self.polygon)
+            self.cnv.delete(self.cursor)
+            for line in self.buttons:
+                for b in line:
+                    b.destroy()
+
+        def createButtons(self):
+            liste = [chr(c) for c in range(ord('A'), ord('Z')+1)] + [chr(c) for c in range(ord('a'), ord('z')+1)] + [chr(c) for c in range(ord('0'), ord('9')+1)] + [' ', '-', '_', '{', '}', '[', ']', '(', ')', '/', '\\', '←']
+            for i in range(4):
+                self.buttons.append([])
+                for j in range(22):
+                    if i*23+j < len(liste):
+                        b = Button(self.cnv, self.x+15+j*30, self.y+15+30*i, 30, 10, text=liste[i*23+j], font=self.font, outline=False)
+                        self.buttons[i].append(b)
+                        b.draw()
+                        b.bind("<Enter>", lambda e, i=i, j=j: self.change((i,j)))
+                        b.bind("<Button-1>", lambda e, l=liste[i*23+j]: self.changeName(l))
+
+        def changeName(self, letter):
+            if letter == "←":
+                if len(self.text) > 0:
+                    self.text = self.text[:-1]
+                    print(self.text)
+                    self.cnv.itemconfigure("name", text=self.text)
+            else:
+                self.text.append(letter)
+
+        def change(self, b):
+            i, j = b
+            if not(i == self.lastpos[0] and j==self.lastpos[1]):
+                self.cnv.move(self.cursor, (j-self.lastpos[1])*30, (i-self.lastpos[0])*30)
+                self.lastpos = [i, j]
+
+class Game(Frame):
+    def __init__(self, master):
+        Frame.__init__(master)
 
 
 class Button(object):
     """
     Boutons custom
     """
-    def __init__(self, canvas, x, y, width, height, marge=5, text="", font=None):
+    def __init__(self, canvas, x, y, width, height, marge=5, text="", font=None, outline=True):
         self.cnv = canvas
+        self.outline = outline
         self.marge = marge
         self.points = [(x+marge,y), (x+width-marge, y), (x+width, y+marge), (x+width, y+height-marge), (x+width-marge, y+height), (x+marge, y+height), (x, y+height-marge), (x, y+marge)]
         self.x = x
@@ -295,19 +372,23 @@ class Button(object):
         self.events = []
 
     def draw(self):
-        self.polygon = self.cnv.create_polygon(self.points, outline="white", fill='')
+        if self.outline:
+            self.polygon = self.cnv.create_polygon(self.points, outline="white", fill='')
         self.label = self.cnv.create_text(self.x + self.w//2, self.y+self.h//2, text=self.text, font=self.font, fill="white")
 
     def hide(self):
-        self.cnv.itemconfigure(self.polygon, state="hidden")
+        if self.outline:
+            self.cnv.itemconfigure(self.polygon, state="hidden")
         self.cnv.itemconfigure(self.label, state="hidden")
 
     def show(self):
-        self.cnv.itemconfigure(self.polygon, state="normal")
+        if self.outline:
+            self.cnv.itemconfigure(self.polygon, state="normal")
         self.cnv.itemconfigure(self.label, state="normal")
 
     def destroy(self):
-        self.cnv.delete(self.polygon)
+        if self.outline:
+            self.cnv.delete(self.polygon)
         self.cnv.delete(self.label)
 
     def changePos(self, x, y):
@@ -324,13 +405,15 @@ class Button(object):
         self.label = self.cnv.create_text(self.x+self.w//2, self.y+self.h//2, text=self.text, font=self.font, fill="white")
 
     def bind(self, event, func):
-            self.cnv.tag_bind(self.polygon, event, func)
+            if self.outline:
+                self.cnv.tag_bind(self.polygon, event, func)
             self.cnv.tag_bind(self.label, event, func)
             self.events.append((event, func))
 
     def unbind(self):
         for event, func in self.events:
-            self.cnv.tag_unbind(self.polygon, event)
+            if self.outline:
+                self.cnv.tag_unbind(self.polygon, event)
             self.cnv.tag_unbind(self.label, event)
 
     def rebind(self):
@@ -339,14 +422,17 @@ class Button(object):
         pour palier a cela la fonction rebind permet de redonner les evenements au bouton
         """
         for event, func in self.events:
-            self.cnv.tag_bind(self.polygon, event, func)
+            if self.outline:
+                self.cnv.tag_bind(self.polygon, event, func)
             self.cnv.tag_bind(self.label, event, func)
 
     def mouseOver(self, event):
-        self.cnv.itemconfig(self.polygon, fill="#888888")
+        if self.outline:
+            self.cnv.itemconfig(self.polygon, fill="#888888")
 
     def mouseQuit(self, event):
-        self.cnv.itemconfig(self.polygon, fill='')
+        if self.outline:
+            self.cnv.itemconfig(self.polygon, fill='')
 
 if __name__ == "__main__":
     WIDTH = 1000
