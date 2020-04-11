@@ -134,14 +134,14 @@ class SelectMenu(Frame):
         self.cnv.image = img
 
         # récupération des infos des joueurs de chaques parties si existante
-        self.infosFile1 = self.getFileInfo("saves/file1.txt")
-        self.infosFile2 = self.getFileInfo("saves/file2.txt")
-        self.infosFile3 = self.getFileInfo("saves/file3.txt")
+        self.infosFile1 = self.getFileInfo("saves/file1")
+        self.infosFile2 = self.getFileInfo("saves/file2")
+        self.infosFile3 = self.getFileInfo("saves/file3")
 
         # création des boutons
-        self.b1 = Button(self.cnv, WIDTH//4, 100, WIDTH//2, 75, text="Pas de sauvegarde" if self.infosFile1 == None else self.infosFile1["charaName"])
-        self.b2 = Button(self.cnv, WIDTH//4, 200, WIDTH//2, 75, text="Pas de sauvegarde" if self.infosFile2 == None else self.infosFile2["charaName"])
-        self.b3 = Button(self.cnv, WIDTH//4, 300, WIDTH//2, 75, text="Pas de sauvegarde" if self.infosFile3 == None else self.infosFile3["charaName"])
+        self.b1 = Button(self.cnv, WIDTH//4, 100, WIDTH//2, 75, text="Pas de sauvegarde" if self.infosFile1 == None else self.infosFile1["name"])
+        self.b2 = Button(self.cnv, WIDTH//4, 200, WIDTH//2, 75, text="Pas de sauvegarde" if self.infosFile2 == None else self.infosFile2["name"])
+        self.b3 = Button(self.cnv, WIDTH//4, 300, WIDTH//2, 75, text="Pas de sauvegarde" if self.infosFile3 == None else self.infosFile3["name"])
         self.back = None
         self.play = None
         self.keyboard = None
@@ -170,31 +170,33 @@ class SelectMenu(Frame):
     def getFileInfo(self, filepath):
         """
         E : le chemin d'acces d'un fichier
-        S : None : ssi pas d'infos sur la partie
+        S : None : ssi pas d'infos sur la partie ou données corrompus
             infos(dico) : les infos de la partie ssi existantes
         """
         infos = {
-            "charaName" : "",
+            "name" : "",
             "map" : (0, 0),
             "life" : 300,
             "maxLife" : 300}
         try:
             file = open(filepath, "r")
             name = file.readline().strip('\n')
-            pos = file.readline().strip('\n')
+            pos = file.readline().strip('\n').strip("()")
             life = file.readline().strip('\n')
             maxLife = file.readline().strip('\n')
             file.close()
-            infos["charaName"] = name
+            infos["name"] = name
             i = pos.find(',')
-            infos["map"] =(int(pos[0:i]), int(pos[i+1:]))
+            infos["map"] = [int(pos[0:i]), int(pos[i+1:])]
             infos["life"] = int(life)
             infos["maxLife"] = int(maxLife)
             return infos
         except EnvironmentError:
-            Path("saves").mkdir(parents=True, exist_ok=True) # création du dossier si non existant
+            # création du dossier "saves" si non existant
+            Path("saves").mkdir(parents=True, exist_ok=True)
             return None
         except ValueError:
+            # données corrompus
             return None
 
     def func(self, event, index):
@@ -259,7 +261,7 @@ class SelectMenu(Frame):
                 self.back.bind("<Button-1>", lambda e: self.detransition(index, e))
                 self.back.bind("<Enter>", self.back.mouseOver)
                 self.back.bind("<Leave>", self.back.mouseQuit)
-                self.play.bind("<Button-1>", lambda e:self.createFile("file%d.txt" % index) if self.play.text=="Créer" else self.master.switch_frame(Game))
+                self.play.bind("<Button-1>", lambda e: self.createFile("saves/file%d" % (index)) if self.play.text=="Créer" else self.master.switch_frame(Game))
                 self.play.bind("<Enter>", self.play.mouseOver)
                 self.play.bind("<Leave>", self.play.mouseQuit)
                 self.showFileMenu(index)
@@ -272,29 +274,25 @@ class SelectMenu(Frame):
         self.transition3(index, 10 if index==2 else 20, dt=-1)
         try:
             self.cnv.delete("lbl1")
-            # self.cnv.delete("name")
-            # self.cnv.delete("cuursor")
+            self.cnv.delete("name")
             self.keyboard.destroy()
         except:
             pass
 
     def showFileMenu(self, index):
         if self.play.text == "Créer":
-            self.cnv.create_text(180, 220, text="Nom :", fill="white", font=Font(family="Arial", size=20), tag="lbl1")
-            # self.cnv.create_text(tag="name")
-            # self.cnv.create_line(tag="cursor")
+            font = Font(family="Arial", size=20)
+            self.cnv.create_text(180, 220, text="Nom :", fill="white", font=font, tag="lbl1")
+            self.cnv.create_text(240, 220, text="Number", fill="white", font=font, tag="name", anchor='w')
             self.keyboard = self.KeyBoard(self.cnv, 142, 250, 700, HEIGHT - 400)
-            self.createFile("saves/file%d" % index)
         else:
             pass
 
     def createFile(self, filepath):
-        pass
-        # file = open(filepath, "x")
-        # file.close()
-        # file = open(filepath, 'w')
-        # for line in self.infosFile1 if filepath[-5] == "1" else self.infosFile2 if filepath[-5] == "2" else self.infosFile3:
-        #     file.write(str(line))
+        file = open(filepath, 'w')
+        save(infosBase(self.keyboard.text), file)
+        file.close()
+        self.master.switch_frame(SelectMenu)
 
     class KeyBoard(object):
         def __init__(self, cnv, x, y, width, height, marge=5):
@@ -336,10 +334,13 @@ class SelectMenu(Frame):
             if letter == "←":
                 if len(self.text) > 0:
                     self.text = self.text[:-1]
-                    print(self.text)
-                    self.cnv.itemconfigure("name", text=self.text)
             else:
-                self.text.append(letter)
+                if len(self.text) < 10:
+                    self.text += letter
+            self.cnv.itemconfigure("name", text=self.text)
+
+        def changeName2(self):
+            self.changeName(self.buttons[self.lastpos[0]][self.lastpos[1]].text)
 
         def change(self, b):
             i, j = b

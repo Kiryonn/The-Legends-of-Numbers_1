@@ -13,4 +13,14 @@ def rgb_to_hex(rgb):
 def hex_to_rgb(h):
     return (int(h[i:i+2], 16) for i in (0, 2, 4))
 
+def infosBase(name):
+    infos = {}
+    infos["name"] = name
+    infos["map"] = (0, 0)
+    infos["life"] = 300
+    infos["maxLife"] = 300
+    return infos
 
+def save(infos, file):
+    for line in infos:
+        file.write(str(infos[line]) + "\n")
