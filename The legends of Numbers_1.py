@@ -6,7 +6,7 @@ Created on Thu Apr  2 17:59:24 2020
 """
 
 from biblio import *
-from tkinter import Tk, Frame, Canvas, PhotoImage
+from tkinter import Tk, Frame, Canvas, PhotoImage, Label
 from tkinter.font import Font
 from pathlib import Path
 from random import randrange
@@ -272,12 +272,9 @@ class SelectMenu(Frame):
 
     def detransition(self, index, event):
         self.transition3(index, 10 if index==2 else 20, dt=-1)
-        try:
-            self.cnv.delete("lbl1")
-            self.cnv.delete("name")
-            self.keyboard.destroy()
-        except:
-            pass
+        self.cnv.delete("lbl1")
+        self.cnv.delete("name")
+        self.keyboard.destroy()
 
     def showFileMenu(self, index):
         if self.play.text == "Créer":
@@ -350,7 +347,8 @@ class SelectMenu(Frame):
 
 class Game(Frame):
     def __init__(self, master):
-        Frame.__init__(master)
+        Frame.__init__(self, master)
+        Label(self, text="Il n'y a pas de jeu pour l'instant", font=Font(family="Arial", size=20)).pack()
 
 
 class Button(object):
