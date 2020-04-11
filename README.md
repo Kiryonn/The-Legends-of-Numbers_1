@@ -6,4 +6,4 @@ The Legegend of Numbers : 1 est un jeu 2d vu de haut ou vous devrez résoudre de
 Le nom du jeu n'a pas été choisit de manière arbitraire. Il ne s'appelle  pas " 1 " uniquement car c'est mon premier jeu. Il y a plusieurs autres raisons. Vous les découvriraient en jouant :)
 
 Un peu de lore :
-Le Personnage de ce jeu à son propre nom comme dans les jeux Zelda. Il s'appelle Number.
+Le Personnage de ce jeu à son propre nom comme dans les jeux Zelda. Il/Elle s'appelle Number.
